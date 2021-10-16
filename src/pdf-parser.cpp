@@ -13,7 +13,12 @@ void findTitle(string path) {
 
     if(monFlux)  
     {
-        cout << "La lecture du fichier est prête." << endl;
+        for (unsigned int i=1; i< 16; i++) {
+
+            getline(monFlux, ligne); 
+            cout << ligne << " " << i << endl;            
+        
+        }
     } else {
         cerr << "ERREUR : Impossible d'ouvrir le fichier." << endl;
     }
