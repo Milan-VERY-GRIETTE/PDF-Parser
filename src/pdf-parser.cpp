@@ -13,8 +13,10 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    std::string inputPath = argv[1];
+
     // PDF paths recuperation
-    std::vector<std::string> files;
+    std::vector<std::string> pdfFiles;
 
     if (auto dir = opendir(argv[1])) {
         std::cout << "> Chemin valide, détection des fichiers PDF..." << std::endl;
@@ -22,7 +24,7 @@ int main(int argc, char const *argv[])
         while (auto f = readdir(dir)) {
             filePath = f->d_name;
             if (filePath.size() > 5 && filePath.substr(filePath.size() - 4) == ".pdf") {
-                files.push_back(filePath);
+                pdfFiles.push_back(filePath);
             }
             else {
                 continue;
@@ -34,7 +36,31 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "> " << files.size() << " fichier(s) PDF..." << std::endl;
+    std::cout << "> " << pdfFiles.size() << " fichier(s) PDF..." << std::endl;
 
-    return 0;
+
+    // creating the temporary folders
+    system("mkdir temp_plain");
+
+    // process all the pdf files with pdf2txt
+    std::vector<std::string> plainFiles;
+
+    for (auto f : pdfFiles) {
+        system(("pdf2txt " + inputPath + f + " -t text -A -L 1 -o temp_plain/" + f.substr(0, f.size() - 3) + "txt").c_str());
+        plainFiles.push_back("temp_plain/" + f.substr(0, f.size() - 3) + "txt");
+    }
+    
+    for (auto f : plainFiles) {
+        std::cout << f << std::endl;
+    }
+
+    // TODO: INFO RECUPERATION
+
+    // removing the temporary folder
+    system("rm -r temp_plain");
+
+    // replacing the output folder
+    system("rm -r output; mkdir output");
+
+    // TODO: RESULTS WRITING
 }
