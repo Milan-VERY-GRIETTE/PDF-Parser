@@ -137,7 +137,7 @@ int findUni(fstream &of){
 }
 
 //fonction d'extraction de contenue entre deux ligne d'un fichier passé en paramètre
-int extractAbstract(fstream &of, int start, int end){
+string extractAbstract(fstream &of, int start, int end){
     string abstract, extracted;
     string lower_abstract;
     bool found = false;
@@ -150,9 +150,9 @@ int extractAbstract(fstream &of, int start, int end){
             abstract = abstract + "\n" + extracted;
             line++;
         }
-        cout << abstract;
+        //cout << abstract;
     }
-    return 0;   
+    return abstract;   
 }
 
 //Choix de la création de diverses fonction de recherche car fonctionnement différent en cas d'echec de match
