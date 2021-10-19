@@ -1,12 +1,27 @@
 #include <iostream>
-#include <fstream>
 #include <string>
+#include <fstream>
+#include <dirent.h>
+#include <vector>
+#include <algorithm>
+#include <regex>
 #include <stdio.h>
 #include <ctype.h>
 #include <locale>
 #include <limits>
 
 using namespace std;
+
+
+// struct used to store the data as objects
+struct File {
+   std::string fileName;
+   std::string plainPath;
+   std::string title;
+   std::string abstract;
+};
+
+
 
 //Fonction de déplacement dans un fichier. Prend une référence fstream et un integer représentant la ligne choisi
 std::fstream& GotoLine(std::fstream& file, unsigned int num){
@@ -155,21 +170,129 @@ string extractAbstract(fstream &of, int start, int end){
     return abstract;   
 }
 
-//Choix de la création de diverses fonction de recherche car fonctionnement différent en cas d'echec de match
+
+// finds and returns the title from a plain text file
+std::string findTitle(std::string path) {
+    
+    std::string ligne;
+    std::string title;
+    std::smatch m;
+    std::ifstream monFlux(path);
+    std::regex update("Update");
+    std::regex search("Search");
+    std::regex representations("Representations");
+    std::regex space("Space");
+    std::regex lattices("Lattices");
+    std::regex speech("SPEECH");
+    std::regex tasks("Tasks");
+    std::regex binary("Binary");
+    std::regex references("References");
+    std::regex arXiv("arXiv");
+
+    if(monFlux) {
+        for (unsigned int i= 1; i < 10; i++) {
+            getline(monFlux, ligne); 
+
+            if (regex_search(ligne,m,update)) {
+                title = title + " " + ligne; 
+            } else if(regex_search(ligne,m,search)) {
+                title = ligne; 
+            } else if(regex_search(ligne,m,representations) || regex_search(ligne,m,space)) {
+
+                if (regex_search(title,m,arXiv)) {
+                    title = "";
+                    title = ligne;
+                } else { 
+                    title = title + " " + ligne; 
+                } 
+
+            } else if(regex_search(ligne,m,lattices)) {
+                title = title + " " + ligne;
+            } else if(regex_search(ligne,m,speech)) {
+                title = title + " " + ligne; 
+            } else if(regex_search(ligne,m,tasks) || regex_search(ligne,m,binary)) {
+
+                if (title == "LETTER") {
+                    title = "";
+                    title = ligne;
+                } else { 
+                    title = title + " " + ligne; 
+                }   
+
+            } else if(regex_search(ligne,m,references)) {
+                title = title + " " + ligne;
+            } else if(i == 1) {
+                title = ligne; 
+            } 
+        }
+
+        return title;
+    } else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return "";
+    }
+}
+
+
 int main(int argc, char const *argv[])
 {
-    fstream of;
-    //sera remplacer lors du merge
-    of.open("Das_Martin.txt");
-    int start = findAbstract(of);
-    //prise en compte de la possibilité d'echec de match de abstract
-    if (start == 0){
-        start = findUni(of);
+    std::cout << "--- Parseur PDF d'articles en plain texte ---" << std::endl;
+
+    // Argument check
+    if (argc < 2) {
+        std::cerr << "> Erreur. Chemin vers le dossier non fourni." << std::endl;
+        exit(EXIT_FAILURE);
     }
-    //la fonction intégre une gestion en cas d'echec de match du mot clé
-    int end = findIntro(of);
-    GotoLine(of, start);
-    cout << start << " " << end << endl;
-    extractAbstract(of, start, end);
-    return 0;
+
+    std::string inputPath = argv[1];
+
+    // PDF paths recuperation
+    std::vector<File> files;
+
+    if (auto dir = opendir(argv[1])) {
+        std::cout << "> Chemin valide, détection des fichiers PDF..." << std::endl;
+        std::string filePath = "";
+        while (auto f = readdir(dir)) {
+            filePath = f->d_name;
+            if (filePath.size() > 5 && filePath.substr(filePath.size() - 4) == ".pdf") {
+                File tempFile;
+                tempFile.fileName = filePath;
+                files.push_back(tempFile);
+            }
+            else {
+                continue;
+            }    
+        }
+        closedir(dir);
+    } else {
+        std::cerr << "> Erreur. Le chemin fourni n'est pas valide." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    std::cout << "> " << files.size() << " fichier(s) PDF..." << std::endl;
+
+    // creating the temporary folder
+    system("mkdir temp_plain");
+
+    // process all the pdf files with pdf2txt
+    for (auto &f : files) {
+        system(("pdftotext " + inputPath + f.fileName + " temp_plain/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt").c_str());
+        f.plainPath = "temp_plain/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
+    }
+    
+    // find and extract all the titles
+    std::cout << "> Récupération des titres..." << std::endl;
+    for (auto &f : files) {
+        f.title = findTitle(f.plainPath);
+    }
+
+    // TODO: ABSTRACT RECUPERATION
+
+    // removing the temporary folder
+    system("rm -r temp_plain");
+
+    // replacing the output folder
+    system("rm -r output; mkdir output");
+
+    // TODO: RESULTS WRITING
 }
