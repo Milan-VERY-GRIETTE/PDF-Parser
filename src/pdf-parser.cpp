@@ -1,96 +1,71 @@
-using namespace std;
-
-#include <string>
 #include <iostream>
+#include <string>
 #include <fstream>
-#include <algorithm>
-#include <regex>
 #include <dirent.h>
 #include <vector>
+#include <algorithm>
+#include <regex>
 
 
-string findTitle(string path) {
+std::string findTitle(std::string path) {
     
-    string ligne;
-    string title;
-    smatch m;
-    ifstream monFlux(path);
-    regex update("Update");
-    regex search("Search");
-    regex representations("Representations");
-    regex space("Space");
-    regex lattices("Lattices");
-    regex speech("SPEECH");
-    regex tasks("Tasks");
-    regex binary("Binary");
-    regex references("References");
-    regex arXiv("arXiv");
+    std::string ligne;
+    std::string title;
+    std::smatch m;
+    std::ifstream monFlux(path);
+    std::regex update("Update");
+    std::regex search("Search");
+    std::regex representations("Representations");
+    std::regex space("Space");
+    std::regex lattices("Lattices");
+    std::regex speech("SPEECH");
+    std::regex tasks("Tasks");
+    std::regex binary("Binary");
+    std::regex references("References");
+    std::regex arXiv("arXiv");
 
-
-    if(monFlux)  
-    {
+    if(monFlux) {
         for (unsigned int i= 1; i < 10; i++) {
-
             getline(monFlux, ligne); 
-            if (regex_search(ligne,m,update))
-            {
+
+            if (regex_search(ligne,m,update)) {
                 title = title + " " + ligne; 
-
             } else if(regex_search(ligne,m,search)) {
-
                 title = ligne; 
-
             } else if(regex_search(ligne,m,representations) || regex_search(ligne,m,space)) {
-                
-                if (regex_search(title,m,arXiv))
-                {
+
+                if (regex_search(title,m,arXiv)) {
                     title = "";
                     title = ligne;
-
-                } else {
-                    
+                } else { 
                     title = title + " " + ligne; 
                 } 
 
             } else if(regex_search(ligne,m,lattices)) {
-
                 title = title + " " + ligne;
-
             } else if(regex_search(ligne,m,speech)) {
-
                 title = title + " " + ligne; 
-
             } else if(regex_search(ligne,m,tasks) || regex_search(ligne,m,binary)) {
-                
-                if (title == "LETTER")
-                {
+
+                if (title == "LETTER") {
                     title = "";
                     title = ligne;
-
-                } else {
-                    
+                } else { 
                     title = title + " " + ligne; 
                 }   
 
             } else if(regex_search(ligne,m,references)) {
-
                 title = title + " " + ligne;
-
             } else if(i == 1) {
-
                 title = ligne; 
-            }
-            
+            } 
         }
 
         return title;
-
     } else {
-
-        cerr << "ERREUR : Impossible d'ouvrir le fichier." << endl;
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
         return "";
     }
-
 }
 
 
@@ -142,7 +117,7 @@ int main(int argc, char const *argv[])
     }
     
     for (auto f : plainFiles) {
-        std::cout << f << std::endl;
+        std::cout << findTitle(f) << std::endl;
     }
 
     // TODO: INFO RECUPERATION
