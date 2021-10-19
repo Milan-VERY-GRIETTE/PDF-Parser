@@ -8,17 +8,16 @@
 
 using namespace std;
 
-// std::fstream& GotoLine(std::fstream& file, unsigned int num){
-//     file.seekg(std::ios::beg);
-//     for(int i=0; i < num - 1; ++i){
-//         file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-//     }
-//     return file;
-// }
+std::fstream& GotoLine(std::fstream& file, unsigned int num){
+    file.seekg(std::ios::beg);
+    for(int i=0; i < num - 1; ++i){
+        file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+    }
+    return file;
+}
 
 
 int findAbstract(fstream &of){
-    //of.open("Das_Martin.txt");
     string abstract;
     string lower_abstract;
     string s2 = "aim";
@@ -147,22 +146,22 @@ int findUni(fstream &of){
     
 }
 
-// int extractAbstract(fstream &of, int start, int end){
-//     string abstract, extracted;
-//     string lower_abstract;
-//     bool found = false;
-//     int line = start;
-//     if (of.is_open())
-//     {
-//         while (line <= end){
-//             getline(of, extracted);
-//             abstract = abstract + "\n" + extracted;
-//             line++;
-//         }
-//         cout << abstract;
-//     }
-//     return 0;   
-// }
+int extractAbstract(fstream &of, int start, int end){
+    string abstract, extracted;
+    string lower_abstract;
+    bool found = false;
+    int line = start;
+    if (of.is_open())
+    {
+        while (line <= end){
+            getline(of, extracted);
+            abstract = abstract + "\n" + extracted;
+            line++;
+        }
+        cout << abstract;
+    }
+    return 0;   
+}
 
 
 int main(int argc, char const *argv[])
@@ -174,8 +173,8 @@ int main(int argc, char const *argv[])
         start = findUni(of);
     }
     int end = findIntro(of);
-    // GotoLine(of, start);
-    // cout << start << " " << end << endl;
-    // extractAbstract(of, start, end);
+    GotoLine(of, start);
+    cout << start << " " << end << endl;
+    extractAbstract(of, start, end);
     return 0;
 }
