@@ -7,6 +7,16 @@
 #include <regex>
 
 
+// struct used to store the data as objects
+struct File {
+   std::string fileName;
+   std::string plainPath;
+   std::string title;
+   std::string abstract;
+};
+
+
+// finds and returns the title from a plain text file
 std::string findTitle(std::string path) {
     
     std::string ligne;
@@ -82,7 +92,7 @@ int main(int argc, char const *argv[])
     std::string inputPath = argv[1];
 
     // PDF paths recuperation
-    std::vector<std::string> pdfFiles;
+    std::vector<File> files;
 
     if (auto dir = opendir(argv[1])) {
         std::cout << "> Chemin valide, détection des fichiers PDF..." << std::endl;
@@ -90,7 +100,9 @@ int main(int argc, char const *argv[])
         while (auto f = readdir(dir)) {
             filePath = f->d_name;
             if (filePath.size() > 5 && filePath.substr(filePath.size() - 4) == ".pdf") {
-                pdfFiles.push_back(filePath);
+                File tempFile;
+                tempFile.fileName = filePath;
+                files.push_back(tempFile);
             }
             else {
                 continue;
@@ -102,25 +114,24 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "> " << pdfFiles.size() << " fichier(s) PDF..." << std::endl;
+    std::cout << "> " << files.size() << " fichier(s) PDF..." << std::endl;
 
-
-    // creating the temporary folders
+    // creating the temporary folder
     system("mkdir temp_plain");
 
     // process all the pdf files with pdf2txt
-    std::vector<std::string> plainFiles;
-
-    for (auto f : pdfFiles) {
-        system(("pdftotext " + inputPath + f + " temp_plain/" + f.substr(0, f.size() - 3) + "txt").c_str());
-        plainFiles.push_back("temp_plain/" + f.substr(0, f.size() - 3) + "txt");
+    for (auto &f : files) {
+        system(("pdftotext " + inputPath + f.fileName + " temp_plain/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt").c_str());
+        f.plainPath = "temp_plain/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
     }
     
-    for (auto f : plainFiles) {
-        std::cout << findTitle(f) << std::endl;
+    // find and extract all the titles
+    std::cout << "> Récupération des titres..." << std::endl;
+    for (auto &f : files) {
+        f.title = findTitle(f.plainPath);
     }
 
-    // TODO: INFO RECUPERATION
+    // TODO: ABSTRACT RECUPERATION
 
     // removing the temporary folder
     system("rm -r temp_plain");
