@@ -20,22 +20,6 @@ struct File {
 };
 
 
-//Fonction écriture dans un fichier prenant en paramètre un path et un vecteur de structure File
-void writeInFile(std::vector<File> &files, std::string path){
-    for (auto &f : files) {
-        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
-        //ATTENTION sous windows chemin se note avec \ et non /
-        std::string txt = path + "\\" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
-        std::cout << txt.c_str() << std::endl;
-        std::ofstream outfile (txt.c_str(), std::ofstream::out);
-        outfile << "Nom du fichier: " << f.fileName << std::endl;
-        outfile << "Titre: " << f.title << std::endl;
-        outfile << "Abstract: " << std::endl << f.abstract << std::endl;
-    }
-    
-}
-
-
 // finds and returns the title from a plain text file
 std::string findTitle(std::string path) {
     
@@ -241,6 +225,20 @@ std::string extractAbstract(std::fstream &of, int start, int end){
 }
 
 
+//Fonction écriture dans un fichier prenant en paramètre un path et un vecteur de structure File
+void writeInFile(std::vector<File> &files, std::string path){
+    for (auto &f : files) {
+        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
+        //ATTENTION sous windows chemin se note avec \ et non /
+        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
+        std::ofstream outfile (txt.c_str(), std::ofstream::out);
+        outfile << "Nom du fichier: " << f.fileName << std::endl;
+        outfile << "Titre: " << f.title << std::endl;
+        outfile << "Abstract: " << std::endl << f.abstract << std::endl;
+    }
+}
+
+
 int main(int argc, char const *argv[])
 {
     std::cout << "--- Parseur PDF d'articles en plain texte ---" << std::endl;
@@ -296,8 +294,8 @@ int main(int argc, char const *argv[])
         of.open(f.plainPath);
         int start = findAbstract(of) == 0 ? findUni(of) : findAbstract(of);
         GotoLine(of, start);
+        findIntro(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));
-        std::cout << std::endl << f.fileName << " ABSTRACT: " << f.abstract << std::endl;
     }
 
     // removing the temporary folder
@@ -306,5 +304,11 @@ int main(int argc, char const *argv[])
     // replacing the output folder
     system("rm -r output; mkdir output");
 
-    // TODO: RESULTS WRITING
+    // results writing
+    std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
+    writeInFile(files, "output");
+
+    std::cout << "--- Fin du programme ---" << std::endl;
+
+    return 0;
 }
