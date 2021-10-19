@@ -46,7 +46,7 @@ int main(int argc, char const *argv[])
     std::vector<std::string> plainFiles;
 
     for (auto f : pdfFiles) {
-        system(("pdf2txt " + inputPath + f + " -t text -A -L 1 -o temp_plain/" + f.substr(0, f.size() - 3) + "txt").c_str());
+        system(("pdftotext " + inputPath + f + " temp_plain/" + f.substr(0, f.size() - 3) + "txt").c_str());
         plainFiles.push_back("temp_plain/" + f.substr(0, f.size() - 3) + "txt");
     }
     
