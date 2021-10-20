@@ -302,7 +302,7 @@ int main(int argc, char const *argv[])
     system("rm -r temp_plain");
 
     // replacing the output folder
-    system("rm -r output; mkdir output");
+    system("rm -rf output; mkdir output");
 
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
