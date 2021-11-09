@@ -249,6 +249,18 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    std::string outputType = "-t";
+
+    if (!argv[2]) {
+        std::cout << "> Attention. Type de sortie non spécifié. Le type texte sera utilisé par défaut." << std::endl;
+    } else if (!strcmp(argv[2], "-t") || !strcmp(argv[2], "-x")) {
+        outputType = argv[2];
+    } else {
+        std::cout << "> Attention. Type de sortie invalide. Le type texte sera utilisé par défaut." << std::endl;
+    }
+
+    std::cout << "> Type de sortie chosie : " << (outputType == "-x" ? "XML" : "TXT") << std::endl;
+
     std::string inputPath = argv[1];
 
     // PDF paths recuperation
@@ -306,8 +318,12 @@ int main(int argc, char const *argv[])
 
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
-    writeInFile(files, "output");
-
+    if (outputType == "-x") {
+        writeInFile(files, "output");
+    } else {
+        writeInFile(files, "output");
+    }
+    
     std::cout << "--- Fin du programme ---" << std::endl;
 
     return 0;
