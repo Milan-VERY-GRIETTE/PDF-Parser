@@ -214,10 +214,10 @@ std::string extractAbstract(std::fstream &of, int start, int end){
     bool found = false;
     int line = start;
     if (of.is_open()) {
-        while (line <= end){
+        while (line < end){
             getline(of, extracted);
             //Concatenation
-            abstract = abstract + "\n" + extracted;
+            abstract = abstract + "\n" + "\t\t" + extracted;
             line++;
         }
     }
@@ -235,7 +235,7 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         outfile << "<article>" << std::endl;
         outfile << "\t<preamble> Nom du fichier: " << f.fileName << "</preamble>" << std::endl;
         outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
-        outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << "</abstract>" << std::endl;
+        outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
         outfile << "<article>" << std::endl;
     }
 }
@@ -333,9 +333,9 @@ int main(int argc, char const *argv[])
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
     if (outputType == "-x") {
-        writeInFile(files, "output");
+        writeInFileXML(files, "output");
     } else {
-        writeInFile(files, "output");
+        writeInFileTXT(files, "output");
     }
     
     std::cout << "--- Fin du programme ---" << std::endl;
