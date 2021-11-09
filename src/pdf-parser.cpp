@@ -226,7 +226,21 @@ std::string extractAbstract(std::fstream &of, int start, int end){
 
 
 //Fonction écriture dans un fichier prenant en paramètre un path et un vecteur de structure File
-void writeInFile(std::vector<File> &files, std::string path){
+void writeInFileXML(std::vector<File> &files, std::string path){
+    for (auto &f : files) {
+        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
+        //ATTENTION sous windows chemin se note avec \ et non /
+        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
+        std::ofstream outfile (txt.c_str(), std::ofstream::out);
+        outfile << "<article>" << std::endl;
+        outfile << "\t<preamble> Nom du fichier: " << f.fileName << "</preamble>" << std::endl;
+        outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
+        outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << "</abstract>" << std::endl;
+        outfile << "<article>" << std::endl;
+    }
+}
+
+void writeInFileTXT(std::vector<File> &files, std::string path){
     for (auto &f : files) {
         //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
         //ATTENTION sous windows chemin se note avec \ et non /
