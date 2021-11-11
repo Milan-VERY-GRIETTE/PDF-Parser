@@ -150,6 +150,7 @@ int findAbstract(std::fstream &of){
 int findIntro(std::fstream &of, int start){
     std::string abstract;
     std::string lower_abstract;
+    //Diverse string on étaient créées afin de convenir au différents types de pdf existant
     std::string s2 = "introduction";
     std::string s3 = "ntroduction";
     std::string s4 = "1";
@@ -165,6 +166,8 @@ int findIntro(std::fstream &of, int start){
                 lower_abstract += tolower(abstract[i],loc);
                 
             }
+            //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
+            //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
             if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
               found = true;
             }
@@ -182,6 +185,7 @@ int findIntro(std::fstream &of, int start){
         int skipped = 0;
         GotoLine(of, line-1);
         getline(of, abstract);
+        //La boucle suivante permet de faire fit des artefact créés par pdftotxt et ne retourner que l'entier correspondant la dernière ligne de l'abstract
         while (abstract == "\n" || abstract == "1\n" || abstract == "" || abstract == "1." || abstract == "1" )
         {
             skipped--;
@@ -270,7 +274,7 @@ std::string extractAbstract(std::fstream &of, int start, int end){
 }
 
 
-
+//fonction d'extraction légèrment différente car se servant de la position du titre et de l'abstarct pour extraire l'auteur
 std::string extractAuthor(std::fstream &of, int* lineTitle){
     std::string extracted;
     std::string abstract;
