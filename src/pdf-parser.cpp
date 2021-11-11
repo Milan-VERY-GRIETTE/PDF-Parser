@@ -17,11 +17,15 @@ struct File {
    std::string plainPath;
    std::string title;
    std::string abstract;
+   std::string author;
 };
 
 
+
+
+
 // finds and returns the title from a plain text file
-std::string findTitle(std::string path) {
+std::string findTitle(std::string path, int * titleLine) {
     
     std::string ligne;
     std::string title;
@@ -44,34 +48,45 @@ std::string findTitle(std::string path) {
 
             if (regex_search(ligne,m,update)) {
                 title = title + " " + ligne; 
+                *titleLine = i;
             } else if(regex_search(ligne,m,search)) {
                 title = ligne; 
+                *titleLine = i;
             } else if(regex_search(ligne,m,representations) || regex_search(ligne,m,space)) {
 
                 if (regex_search(title,m,arXiv)) {
                     title = "";
                     title = ligne;
+                    *titleLine = i;
                 } else { 
-                    title = title + " " + ligne; 
+                    title = title + " " + ligne;
+                    *titleLine = i; 
                 } 
 
             } else if(regex_search(ligne,m,lattices)) {
                 title = title + " " + ligne;
+                *titleLine = i;
             } else if(regex_search(ligne,m,speech)) {
-                title = title + " " + ligne; 
+                title = title + " " + ligne;
+                *titleLine = i; 
+                std::cout << i << std::endl;
             } else if(regex_search(ligne,m,tasks) || regex_search(ligne,m,binary)) {
 
                 if (title == "LETTER") {
                     title = "";
                     title = ligne;
+                    *titleLine = i;
                 } else { 
-                    title = title + " " + ligne; 
+                    title = title + " " + ligne;
+                    *titleLine = i; 
                 }   
 
             } else if(regex_search(ligne,m,references)) {
                 title = title + " " + ligne;
+                *titleLine = i;
             } else if(i == 1) {
-                title = ligne; 
+                title = ligne;
+                *titleLine = i; 
             } 
         }
 
@@ -93,6 +108,7 @@ std::fstream& GotoLine(std::fstream& file, unsigned int num){
     }
     return file;
 }
+
 
 // Fonction de recherche du mot clé abstract, retourne un entier correspondant à la ligne ou il a été retrouvé
 // Penser au passage des fstream par référence car copie impossible
@@ -136,16 +152,19 @@ int findIntro(std::fstream &of, int start){
     std::string abstract;
     std::string lower_abstract;
     std::string s2 = "introduction";
+    std::string s3 = "ntroduction";
     bool found = false;
-    int line = 0;
+    int line = start;
     if (of.is_open()) {
         getline(of, abstract);
         std::locale loc;
         while (!found){
             for (std::string::size_type i=0; i<abstract.length(); ++i){
                 lower_abstract += tolower(abstract[i],loc);
+                
             }
-            if (lower_abstract.find(s2) != std::string::npos || line > start + 20) {
+            if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
+              //std::cout << lower_abstract << std::endl;
               found = true;
             }
             else{
@@ -156,7 +175,7 @@ int findIntro(std::fstream &of, int start){
         }
         of.clear();
         of.seekg(0);
-        return line;
+        return line - 1;
     }
     else {
         std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
@@ -213,6 +232,7 @@ std::string extractAbstract(std::fstream &of, int start, int end){
     std::string lower_abstract;
     bool found = false;
     int line = start;
+    GotoLine(of, line);
     if (of.is_open()) {
         while (line < end){
             getline(of, extracted);
@@ -222,6 +242,33 @@ std::string extractAbstract(std::fstream &of, int start, int end){
         }
     }
     return abstract;   
+}
+
+
+
+std::string extractAuthor(std::fstream &of, int* lineTitle){
+    std::string extracted;
+    std::string abstract;
+    if (*lineTitle != 500)
+    {
+        GotoLine(of, *lineTitle + 1);
+        int line = * lineTitle;
+        int end = findAbstract(of) == 0 ? findUni(of) - 1 : findAbstract(of) - 1;
+        if(line == 3 || 2){std::cout << end << std::endl;}
+        if (of.is_open()) {
+            while (line < end){
+                getline(of, extracted);
+                //Concatenation
+                abstract = abstract + "\n" + "\t\t" + extracted;
+                line++;
+        }
+    }
+    return abstract;   
+
+    }
+    else{
+        return "Erreur";
+    }
 }
 
 
@@ -235,6 +282,7 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         outfile << "<article>" << std::endl;
         outfile << "\t<preamble> Nom du fichier: " << f.fileName << "</preamble>" << std::endl;
         outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
+        outfile << "\t<author> Auteur: " << f.author << "</author>"  << std::endl;
         outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
         outfile << "<article>" << std::endl;
     }
@@ -249,12 +297,14 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Nom du fichier: " << f.fileName << std::endl;
         outfile << "Titre: " << f.title << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
+        outfile << "Auteur: " << std::endl << f.author << std::endl;
     }
 }
 
 
 int main(int argc, char const *argv[])
 {
+    int titleLine;
     std::cout << "--- Parseur PDF d'articles en plain texte ---" << std::endl;
 
     // Argument check
@@ -314,18 +364,22 @@ int main(int argc, char const *argv[])
     // find and extract all the titles
     std::cout << "> Récupération des titres et des abstracts..." << std::endl;
     for (auto &f : files) {
-        f.title = findTitle(f.plainPath);
-
+        //std::cout << titleLine << std::endl;
+        f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
         of.open(f.plainPath);
         int start = findAbstract(of) == 0 ? findUni(of) : findAbstract(of);
         GotoLine(of, start);
-        findIntro(of, start);
+        //std::cout << start << " : " << findIntro(of, start) << std::endl;
+        //findIntro(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));
+        // GotoLine(of, titleLine);
+        
+        f.author = extractAuthor(of, &titleLine);
     }
 
     // removing the temporary folder
-    system("rm -r temp_plain");
+    //system("rm -r temp_plain");
 
     // replacing the output folder
     system("rm -rf output; mkdir output");
