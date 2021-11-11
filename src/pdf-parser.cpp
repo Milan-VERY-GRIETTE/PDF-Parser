@@ -153,6 +153,9 @@ int findIntro(std::fstream &of, int start){
     std::string lower_abstract;
     std::string s2 = "introduction";
     std::string s3 = "ntroduction";
+    std::string s4 = "1";
+    std::string s5 = "web-based";
+    std::string s6 = "license.1is";
     bool found = false;
     int line = start;
     if (of.is_open()) {
@@ -164,8 +167,12 @@ int findIntro(std::fstream &of, int start){
                 
             }
             if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
-              //std::cout << lower_abstract << std::endl;
+              std::cout << lower_abstract << std::endl;
               found = true;
+            }
+            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos){
+                std::cout << lower_abstract << std::endl;
+                found = true;
             }
             else{
                 abstract.clear();
@@ -175,7 +182,20 @@ int findIntro(std::fstream &of, int start){
         }
         of.clear();
         of.seekg(0);
-        return line - 1;
+        int skipped = 0;
+        GotoLine(of, line-1);
+        getline(of, abstract);
+        std::cout << abstract << std::endl;
+        while (abstract == "\n" || abstract == "1\n" || abstract == "" || abstract == "1." || abstract == "1" )
+        {
+            skipped--;
+            GotoLine(of, line + skipped);
+            getline(of, abstract);
+            std::cout << abstract << std::endl;
+        }
+        std::cout << line << "|" << skipped << std::endl;
+        return line + skipped;
+        
     }
     else {
         std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
@@ -185,6 +205,8 @@ int findIntro(std::fstream &of, int start){
 
 //fonction de recherche du mot clé université/ecole retourne un entier correspondant à la ligne ou il a été retrouvé
 int findUni(std::fstream &of){
+    of.clear();
+    of.seekg(0);
     std::string abstract;
     std::string lower_abstract;
     std::string s2 = "university";
@@ -205,11 +227,21 @@ int findUni(std::fstream &of){
             else{
                 abstract.clear();
                 getline(of, abstract);
-                line++;
-            }   
+                line = line + 1;
+            }
+            //std::cout << "bouclefini" << found << line;   
         }
-              
         if (line > 100) {
+            of.clear();
+            of.seekg(0);
+            GotoLine(of, 11);
+            getline(of, abstract);
+            if (abstract == "")
+            {
+                of.clear();
+                of.seekg(0);
+                return 10;
+            }
             of.clear();
             of.seekg(0);
             return 0;
@@ -217,7 +249,7 @@ int findUni(std::fstream &of){
         else {
             of.clear();
             of.seekg(0);
-            return line;
+            return line + 1;
         }
     }
     else {
@@ -251,12 +283,14 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
     std::string abstract;
     if (*lineTitle != 500)
     {
-        GotoLine(of, *lineTitle + 1);
-        int line = * lineTitle;
-        int end = findAbstract(of) == 0 ? findUni(of) - 1 : findAbstract(of) - 1;
-        if(line == 3 || 2){std::cout << end << std::endl;}
+        GotoLine(of, *lineTitle);
+        int line = * lineTitle+1;
+        int end = findAbstract(of) == 101 ? findUni(of) : findAbstract(of) - 1;
+        if(end == 50){end = 3;}
+        std::cout << "end[" << end << "]" << std::endl;
+        GotoLine(of, line);
         if (of.is_open()) {
-            while (line < end){
+            while (line <= end){
                 getline(of, extracted);
                 //Concatenation
                 abstract = abstract + "\n" + "\t\t" + extracted;
@@ -364,20 +398,19 @@ int main(int argc, char const *argv[])
     // find and extract all the titles
     std::cout << "> Récupération des titres et des abstracts..." << std::endl;
     for (auto &f : files) {
-        //std::cout << titleLine << std::endl;
+        std::cout << "Ligne titre: " << titleLine << std::endl;
         f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
         of.open(f.plainPath);
-        int start = findAbstract(of) == 0 ? findUni(of) : findAbstract(of);
+        int start = findAbstract(of) == 101 ? findUni(of) + 1 : findAbstract(of);
         GotoLine(of, start);
-        //std::cout << start << " : " << findIntro(of, start) << std::endl;
+        //std::cout << start << " <- start:uni -> " << findUni(of) << std::endl;
         //findIntro(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));
         // GotoLine(of, titleLine);
         
         f.author = extractAuthor(of, &titleLine);
     }
-
     // removing the temporary folder
     //system("rm -r temp_plain");
 
