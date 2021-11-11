@@ -48,6 +48,8 @@ L'exécution du programme se déroule en plusieurs phases:
 - Récupération du type de sortie demandé
 - Listage de tous les fichiers PDF présents dans ce dossier
 - Parsing de ces fichiers en fichiers textes via l'outil "pdftotext"
-- Recherche et l'extraction du titre du PDF depuis le fichier parsé
-- Recherche et l'extraction de l'abstract du PDF depuis le fichier parsé
+- Recherche et extraction du titre du PDF depuis le fichier parsé
+- Recherche et extraction des informations relatives du PDF depuis le fichier parsé
+- Recherche et extraction de l'abstract du PDF depuis le fichier parsé
+- Recherche et extraction de la bibliographie du PDF depuis le fichier parsé
 - Écriture dans un dossier "output" d'un fichier texte ou xml contenant le nom du fichier original, son titre et son abstract
