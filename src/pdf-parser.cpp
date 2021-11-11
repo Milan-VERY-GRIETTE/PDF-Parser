@@ -345,11 +345,11 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
         std::ofstream outfile (txt.c_str(), std::ofstream::out);
         outfile << "<article>" << std::endl;
-        outfile << "\t<preamble> Nom du fichier: " << f.fileName << "</preamble>" << std::endl;
-        outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
-        outfile << "\t<author> Auteur: " << f.author << "</author>"  << std::endl;
-        outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
-        outfile << "\t<biblio> Biblio: " << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
+        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
+        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
+        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
+        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
 }
@@ -360,8 +360,8 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         //ATTENTION sous windows chemin se note avec \ et non /
         std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
         std::ofstream outfile (txt.c_str(), std::ofstream::out);
-        outfile << "Nom du fichier: " << f.fileName << std::endl;
-        outfile << "Titre: " << f.title << std::endl;
+        outfile << "Nom du fichier: " << std::endl << "\t\t" << f.fileName << std::endl;
+        outfile << "Titre: " << std::endl << "\t\t" << f.title << std::endl;
         outfile << "Auteur: " << std::endl << f.author << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
         outfile << "Biblio: " << std::endl << f.biblio << std::endl;
