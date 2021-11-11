@@ -16,8 +16,9 @@ struct File {
    std::string fileName;
    std::string plainPath;
    std::string title;
-   std::string abstract;
    std::string author;
+   std::string abstract;
+   std::string biblio;
 };
 
 
@@ -273,6 +274,40 @@ std::string extractAbstract(std::fstream &of, int start, int end){
     return abstract;   
 }
 
+std::string findBiblio(std::string path) {
+    
+    std::ifstream monFlux(path);
+
+    std::string ligne;
+    std::smatch m;
+    std::regex references("References");
+
+    int lineCount = 0;
+    int biblioPos = 0;
+
+    std::vector<std::string> document;
+
+    if(monFlux) {
+        while(getline(monFlux, ligne)) {
+            document.push_back(ligne);
+            lineCount++;
+            if (regex_search(ligne , m, references)) {
+                biblioPos = lineCount;
+            }
+        }
+
+        std::string biblio;
+        for (size_t i = biblioPos; i < lineCount; i++) {
+            biblio += "\t\t" +document.at(i) + "\n";
+        }
+        
+        return biblio;
+    } else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return "";
+    }
+}
+
 
 //fonction d'extraction légèrment différente car se servant de la position du titre et de l'abstarct pour extraire l'auteur
 std::string extractAuthor(std::fstream &of, int* lineTitle){
@@ -314,6 +349,7 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
         outfile << "\t<author> Auteur: " << f.author << "</author>"  << std::endl;
         outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<biblio> Biblio: " << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
 }
@@ -326,8 +362,9 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         std::ofstream outfile (txt.c_str(), std::ofstream::out);
         outfile << "Nom du fichier: " << f.fileName << std::endl;
         outfile << "Titre: " << f.title << std::endl;
-        outfile << "Abstract: " << std::endl << f.abstract << std::endl;
         outfile << "Auteur: " << std::endl << f.author << std::endl;
+        outfile << "Abstract: " << std::endl << f.abstract << std::endl;
+        outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
 
@@ -399,9 +436,9 @@ int main(int argc, char const *argv[])
         of.open(f.plainPath);
         int start = findAbstract(of) == 101 ? findUni(of) + 1 : findAbstract(of);
         GotoLine(of, start);
-        f.abstract = extractAbstract(of, start, findIntro(of, start));
-        
+        f.abstract = extractAbstract(of, start, findIntro(of, start));        
         f.author = extractAuthor(of, &titleLine);
+        f.biblio = findBiblio(f.plainPath);
     }
     // removing the temporary folder
     system("rm -r temp_plain");
