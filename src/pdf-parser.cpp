@@ -69,7 +69,6 @@ std::string findTitle(std::string path, int * titleLine) {
             } else if(regex_search(ligne,m,speech)) {
                 title = title + " " + ligne;
                 *titleLine = i; 
-                std::cout << i << std::endl;
             } else if(regex_search(ligne,m,tasks) || regex_search(ligne,m,binary)) {
 
                 if (title == "LETTER") {
@@ -167,11 +166,9 @@ int findIntro(std::fstream &of, int start){
                 
             }
             if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
-              std::cout << lower_abstract << std::endl;
               found = true;
             }
             else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos){
-                std::cout << lower_abstract << std::endl;
                 found = true;
             }
             else{
@@ -185,15 +182,12 @@ int findIntro(std::fstream &of, int start){
         int skipped = 0;
         GotoLine(of, line-1);
         getline(of, abstract);
-        std::cout << abstract << std::endl;
         while (abstract == "\n" || abstract == "1\n" || abstract == "" || abstract == "1." || abstract == "1" )
         {
             skipped--;
             GotoLine(of, line + skipped);
             getline(of, abstract);
-            std::cout << abstract << std::endl;
         }
-        std::cout << line << "|" << skipped << std::endl;
         return line + skipped;
         
     }
@@ -229,7 +223,6 @@ int findUni(std::fstream &of){
                 getline(of, abstract);
                 line = line + 1;
             }
-            //std::cout << "bouclefini" << found << line;   
         }
         if (line > 100) {
             of.clear();
@@ -287,7 +280,6 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
         int line = * lineTitle+1;
         int end = findAbstract(of) == 101 ? findUni(of) : findAbstract(of) - 1;
         if(end == 50){end = 3;}
-        std::cout << "end[" << end << "]" << std::endl;
         GotoLine(of, line);
         if (of.is_open()) {
             while (line <= end){
@@ -398,21 +390,17 @@ int main(int argc, char const *argv[])
     // find and extract all the titles
     std::cout << "> Récupération des titres et des abstracts..." << std::endl;
     for (auto &f : files) {
-        std::cout << "Ligne titre: " << titleLine << std::endl;
         f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
         of.open(f.plainPath);
         int start = findAbstract(of) == 101 ? findUni(of) + 1 : findAbstract(of);
         GotoLine(of, start);
-        //std::cout << start << " <- start:uni -> " << findUni(of) << std::endl;
-        //findIntro(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));
-        // GotoLine(of, titleLine);
         
         f.author = extractAuthor(of, &titleLine);
     }
     // removing the temporary folder
-    //system("rm -r temp_plain");
+    system("rm -r temp_plain");
 
     // replacing the output folder
     system("rm -rf output; mkdir output");
