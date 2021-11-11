@@ -22,9 +22,6 @@ struct File {
 };
 
 
-
-
-
 // finds and returns the title from a plain text file
 std::string findTitle(std::string path, int * titleLine) {
     
@@ -98,8 +95,6 @@ std::string findTitle(std::string path, int * titleLine) {
 }
 
 
-
-
 // Fonction de déplacement dans un fichier. Prend une référence fstream et un integer représentant la ligne choisie
 std::fstream& GotoLine(std::fstream& file, unsigned int num){
     file.seekg(std::ios::beg);
@@ -146,6 +141,7 @@ int findAbstract(std::fstream &of){
         return 0;
     }
 }
+
 
 //fonction de recherche du mot clé introduction retourne un entier correspondant à la ligne ou il a été retrouvé
 int findIntro(std::fstream &of, int start){
@@ -202,6 +198,7 @@ int findIntro(std::fstream &of, int start){
     }
 }
 
+
 //fonction de recherche du mot clé université/ecole retourne un entier correspondant à la ligne ou il a été retrouvé
 int findUni(std::fstream &of){
     of.clear();
@@ -256,6 +253,7 @@ int findUni(std::fstream &of){
     }
 }
 
+
 // Fonction d'extraction de contenue entre deux ligne d'un fichier passé en paramètre
 std::string extractAbstract(std::fstream &of, int start, int end){
     std::string abstract, extracted;
@@ -274,6 +272,8 @@ std::string extractAbstract(std::fstream &of, int start, int end){
     return abstract;   
 }
 
+
+// finds and returns the biblio from a plain text file
 std::string findBiblio(std::string path) {
     
     std::ifstream monFlux(path);
@@ -337,7 +337,7 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
 }
 
 
-//Fonction écriture dans un fichier prenant en paramètre un path et un vecteur de structure File
+//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
 void writeInFileXML(std::vector<File> &files, std::string path){
     for (auto &f : files) {
         //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
@@ -354,6 +354,8 @@ void writeInFileXML(std::vector<File> &files, std::string path){
     }
 }
 
+
+//Fonction écriture dans un fichier XML prenant en paramètre un path et un vecteur de structure File
 void writeInFileTXT(std::vector<File> &files, std::string path){
     for (auto &f : files) {
         //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
@@ -428,8 +430,8 @@ int main(int argc, char const *argv[])
         f.plainPath = "temp_plain/" + f.fileName.substr(0, f.fileName.size() - 3) + "txt";
     }
     
-    // find and extract all the titles
-    std::cout << "> Récupération des titres et des abstracts..." << std::endl;
+    // find and extract the titles abstracts, authors and biblios
+    std::cout << "> Récupération des titres, auteurs, abstracts et bibliographies..." << std::endl;
     for (auto &f : files) {
         f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
