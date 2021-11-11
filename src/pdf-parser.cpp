@@ -17,6 +17,7 @@ struct File {
    std::string plainPath;
    std::string title;
    std::string abstract;
+   std::string biblio;
 };
 
 
@@ -224,6 +225,40 @@ std::string extractAbstract(std::fstream &of, int start, int end){
     return abstract;   
 }
 
+std::string findBiblio(std::string path) {
+    
+    std::ifstream monFlux(path);
+
+    std::string ligne;
+    std::smatch m;
+    std::regex references("References");
+
+    int lineCount = 0;
+    int biblioPos = 0;
+
+    std::vector<std::string> document;
+
+    if(monFlux) {
+        while(getline(monFlux, ligne)) {
+            document.push_back(ligne);
+            lineCount++;
+            if (regex_search(ligne , m, references)) {
+                biblioPos = lineCount;
+            }
+        }
+
+        std::string biblio;
+        for (size_t i = biblioPos; i < lineCount; i++) {
+            biblio += "\t\t" +document.at(i) + "\n";
+        }
+        
+        return biblio;
+    } else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return "";
+    }
+}
+
 
 //Fonction écriture dans un fichier prenant en paramètre un path et un vecteur de structure File
 void writeInFileXML(std::vector<File> &files, std::string path){
@@ -236,6 +271,7 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         outfile << "\t<preamble> Nom du fichier: " << f.fileName << "</preamble>" << std::endl;
         outfile << "\t<titre> Titre: " << f.title << "</titre>"  << std::endl;
         outfile << "\t<abstract> Abstract: " << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<biblio> Biblio: " << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
 }
@@ -249,6 +285,7 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Nom du fichier: " << f.fileName << std::endl;
         outfile << "Titre: " << f.title << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
+        outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
 
@@ -322,6 +359,7 @@ int main(int argc, char const *argv[])
         GotoLine(of, start);
         findIntro(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));
+        f.biblio = findBiblio(f.plainPath);
     }
 
     // removing the temporary folder
