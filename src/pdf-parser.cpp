@@ -18,6 +18,7 @@ struct File {
    std::string title;
    std::string author;
    std::string abstract;
+   std::string discussion;
    std::string biblio;
 };
 
@@ -336,7 +337,69 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
     }
 }
 
+// finds and returns the discussion from a plain text file
+std::string findDiscussion(std::string path) {
+    
+    std::ifstream monFlux(path);
 
+    std::string ligne;
+    std::smatch m;
+    std::regex discussion("Discussion");
+    std::regex discussionUpper("6. DISCUSSION");
+    std::regex references("References");
+    std::regex acknowledgments("Acknowledgments");
+    std::regex conclusion("Conclusions");
+    std::regex conclusionUpper(" CONCLUSIONS");
+
+    int lineCount = 0;
+    int discussionPos = 0;
+    int endDiscussionPos = 0;
+    int detectAcknowPos = 0;
+    int conclusionPos = 0;
+
+
+    std::vector<std::string> document;
+
+    if(monFlux) {
+        while(getline(monFlux, ligne)) {
+            document.push_back(ligne);
+            lineCount++;
+            if (regex_search(ligne , m, discussion) || regex_search(ligne , m, discussionUpper)) {
+                discussionPos = lineCount;
+            } else if(regex_search(ligne , m, references)) {
+                endDiscussionPos = lineCount - 1;
+            } else if (regex_search(ligne , m, acknowledgments)) {
+                detectAcknowPos = lineCount - 1;
+            } else if (regex_search(ligne , m, conclusion) || regex_search(ligne , m, conclusionUpper)) {
+                conclusionPos = lineCount - 1;
+            }
+        }
+
+        std::string discussion = "";
+
+        if(detectAcknowPos != 0)
+        {
+            endDiscussionPos = detectAcknowPos;
+        }
+
+        if(conclusionPos != 0)
+        {
+            endDiscussionPos = conclusionPos;
+        }
+        
+        if(discussionPos != 0)
+        {
+            for (size_t i = discussionPos; i < endDiscussionPos; i++) {
+                discussion += "\t\t" +document.at(i) + "\n";
+            }  
+        } 
+
+        return discussion;
+    } else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return "";
+    }
+}
 //Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
 void writeInFileXML(std::vector<File> &files, std::string path){
     for (auto &f : files) {
@@ -370,6 +433,26 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
     }
 }
 
+//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
+void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
+    for (auto &f : files) {
+        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
+        //ATTENTION sous windows chemin se note avec \ et non /
+        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
+        std::ofstream outfile (txt.c_str(), std::ofstream::out);
+        outfile << "<article>" << std::endl;
+        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
+        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
+        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
+        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        if (f.discussion != "")
+        {
+            outfile << "\t<discussion>" << std::endl << f.discussion << std::endl << "\t</discussion>" << std::endl;
+        }
+        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
+        outfile << "<article>" << std::endl;
+    }
+}
 
 int main(int argc, char const *argv[])
 {
@@ -440,10 +523,11 @@ int main(int argc, char const *argv[])
         GotoLine(of, start);
         f.abstract = extractAbstract(of, start, findIntro(of, start));        
         f.author = extractAuthor(of, &titleLine);
+        f.discussion = findDiscussion(f.plainPath);
         f.biblio = findBiblio(f.plainPath);
     }
     // removing the temporary folder
-    system("rm -r temp_plain");
+    //system("rm -r temp_plain");
 
     // replacing the output folder
     system("rm -rf output; mkdir output");
@@ -451,7 +535,7 @@ int main(int argc, char const *argv[])
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
     if (outputType == "-x") {
-        writeInFileXML(files, "output");
+        writeInFileXMLWithDetails(files, "output");
     } else {
         writeInFileTXT(files, "output");
     }
