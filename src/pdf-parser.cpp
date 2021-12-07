@@ -10,7 +10,6 @@
 #include <locale>
 #include <limits>
 
-
 // struct used to store the data as objects
 struct File {
    std::string fileName;
@@ -19,6 +18,7 @@ struct File {
    std::string author;
    std::string abstract;
    std::string biblio;
+   bool selected = false;
 };
 
 
@@ -328,7 +328,7 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
                 line++;
         }
     }
-    return abstract;   
+    return abstract;
 
     }
     else{
@@ -374,6 +374,7 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
 int main(int argc, char const *argv[])
 {
     int titleLine;
+    std::cout<< u8"\033[2J\033[1;1H";
     std::cout << "--- Parseur PDF d'articles en plain texte ---" << std::endl;
 
     // Argument check
@@ -419,8 +420,62 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "> " << files.size() << " fichier(s) PDF..." << std::endl;
+    std::cout << "> " << files.size() << " fichier(s) PDF detecté(s)..." << std::endl;
 
+    std::cout << "> (1) Traiter tous les fichiers" << std::endl;
+    std::cout << "> (2) Choisir les fichiers à traiter" << std::endl;
+    
+    int menuChoice = 0;
+    while (menuChoice == 0)
+    {
+        std::cout << "> Votre sélection: ";
+        std::cin >> menuChoice;
+
+        if(std::cin.fail() || (menuChoice != 1 && menuChoice != 2)) {
+            std::cin.clear();
+            std::cin.ignore(512, '\n');
+            menuChoice = 0;
+            std::cout << "> Sélection invalide. Veuillez réessayer." << std::endl;
+        }
+    }
+
+    if (menuChoice == 2) {
+        int fileChoice = -1;
+        while (fileChoice == -1)
+        {
+            std::cout<< u8"\033[2J\033[1;1H";
+            std::cout << "> Sélectionnez vos fichiers et entrez \"0\" quand vous avez terminé:" << std::endl;
+
+            int index = 1;
+            for (auto &f : files) {
+                std::cout << "- " << (f.selected ? "[X] " : "[ ] ") << f.fileName << std::endl;
+                index++;
+            }
+            std::cout << "> Votre sélection: ";
+            std::cin >> fileChoice;
+
+            if(std::cin.fail() || fileChoice < 0 || fileChoice >= files.size() + 1) {
+                std::cin.clear();
+                std::cin.ignore(512, '\n');
+            } else if (fileChoice != 0) {
+                files.at(fileChoice-1).selected = !files.at(fileChoice-1).selected;
+                fileChoice = -1;
+            }
+        }
+    } else {
+        for (auto &f : files) {
+            f.selected = true;
+        }
+    }
+
+    std::vector<File> tempFiles;
+    for (auto f : files) {
+        if (f.selected) {
+            tempFiles.push_back(f);
+        }
+    }
+    files = tempFiles;
+    
     // creating the temporary folder
     system("mkdir temp_plain");
 
