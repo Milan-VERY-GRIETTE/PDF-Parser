@@ -19,6 +19,8 @@ struct File {
    std::string author;
    std::string abstract;
    std::string biblio;
+   std::string intro;
+   std::string corps;
 };
 
 
@@ -145,6 +147,162 @@ int findAbstract(std::fstream &of){
 
 //fonction de recherche du mot clé introduction retourne un entier correspondant à la ligne ou il a été retrouvé
 int findIntro(std::fstream &of, int start){
+    std::string abstract;
+    std::string lower_abstract;
+    //Diverse string on étaient créées afin de convenir au différents types de pdf existant
+    std::string s2 = "introduction";
+    std::string s3 = "ntroduction";
+    std::string s4 = "1";
+    std::string s5 = "web-based";
+    std::string s6 = "license.1is";
+    bool found = false;
+    int line = start;
+    if (of.is_open()) {
+        getline(of, abstract);
+        std::locale loc;
+        while (!found){
+            for (std::string::size_type i=0; i<abstract.length(); ++i){
+                lower_abstract += tolower(abstract[i],loc);
+                
+            }
+            //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
+            //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
+            if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
+              found = true;
+            }
+            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos){
+                found = true;
+            }
+            else{
+                abstract.clear();
+                getline(of, abstract);
+                line++;
+            }
+        }
+        of.clear();
+        of.seekg(0);
+        return line;
+        
+    }
+    else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return 0;
+    }
+}
+
+//fonction de recherche du mot clé introduction retourne un entier correspondant à la ligne ou il a été retrouvé
+int findCorps(std::fstream &of, int start){
+    std::string abstract;
+    std::string lower_abstract;
+    //Diverse string on étaient créées afin de convenir au différents types de pdf existant
+    std::string s2 = "the underlying idea of our method is that as the";
+    std::string s3 = "sually, the flow of information in a given document";
+    std::string s4 = "web-based search and clustering";
+    std::string s5 = "finally, sect. 6 concludes the paper";
+    std::string s6 = "the most known rst corpus is the rst discourse";
+    std::string s7 = "performance measure, corpora for evaluation, and intended markup";
+    std::string s8 = "the main goal of this paper is to introduce techniques that can be used for learning";
+    std::string s9 = "several processing tools suites alread exist for";
+    std::string s10 = "segmentations are inadequate in cases where the output";
+    std::string s11 = "r elated w ork";
+    std::string s12 = "the incremental learning strategy";
+    
+    bool found = false;
+    int line = start;
+    if (of.is_open()) {
+        GotoLine(of, start);
+        getline(of, abstract);
+        std::locale loc;
+        while (!found){
+            lower_abstract.clear();
+            for (std::string::size_type i=0; i<abstract.length(); ++i){
+                lower_abstract += tolower(abstract[i],loc);
+                
+            }
+            //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
+            //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
+            if (lower_abstract.find(s2) != std::string::npos || lower_abstract.find(s6) != std::string::npos || lower_abstract.find(s8) != std::string::npos || lower_abstract.find(s9) != std::string::npos || lower_abstract.find(s3) != std::string::npos) {
+              line -= 2;
+              found = true;
+            }
+            if (lower_abstract.find(s5) != std::string::npos) {
+              line += 4;
+              found = true;
+            }
+            else if (lower_abstract.find(s4) != std::string::npos || lower_abstract.find(s7) != std::string::npos) {
+              found = true;
+            }
+            else if(lower_abstract.find(s10) != std::string::npos && lower_abstract.find(s11) != std::string::npos || lower_abstract.find(s12) != std::string::npos || line > 20000){
+                found = true;
+            }
+            else{
+                abstract.clear();
+                getline(of, abstract);
+                line++;
+            }
+        }
+        of.clear();
+        of.seekg(0);
+        if(line == 20001){line = 36;}
+        return line;
+        
+    }
+    else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return 0;
+    }
+}
+
+//fonction de recherche du mot clé introduction retourne un entier correspondant à la ligne ou il a été retrouvé
+int findConclusion(std::fstream &of, int start){
+    std::string abstract;
+    std::string lower_abstract;
+    //Diverse string on étaient créées afin de convenir au différents types de pdf existant
+    std::string s2 = "Conclusion";
+    std::string s3 = "Discussion and Future Work";
+    std::string s4 = "4 Summary";
+    std::string s5 = "Conclusions and Future Work";
+    std::string s6 = "13. Discussion";
+    std::string s7 = "CONCLUSIONS";
+    std::string s8 = "C ONCLUSIONS AND F UTURE W ORK";
+    
+    bool found = false;
+    int line = start;
+    if (of.is_open()) {
+        GotoLine(of, start);
+        getline(of, abstract);
+        std::locale loc;
+        while (!found){
+            lower_abstract.clear();
+            lower_abstract = abstract;
+            //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
+            //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
+            if (lower_abstract.find(s2) != std::string::npos || lower_abstract.find(s3) != std::string::npos || lower_abstract.find(s4) != std::string::npos || lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos) {
+              found = true;
+            }
+            else if (lower_abstract.find(s7) != std::string::npos || lower_abstract.find(s8) != std::string::npos) {
+              found = true;
+            }
+            else{
+                abstract.clear();
+                getline(of, abstract);
+                line++;
+            }
+        }
+        of.clear();
+        of.seekg(0);
+        return line;
+        
+    }
+    else {
+        std::cerr << "> Erreur : Impossible d'ouvrir le fichier temporaire." << std::endl;
+        return 0;
+    }
+}
+
+
+
+int findEndAbstract(std::fstream &of, int start){
     std::string abstract;
     std::string lower_abstract;
     //Diverse string on étaient créées afin de convenir au différents types de pdf existant
@@ -336,6 +494,28 @@ std::string extractAuthor(std::fstream &of, int* lineTitle){
     }
 }
 
+// std::string extractBody(std::fstream &of, int* lineCorps){
+//     std::string extracted;
+//     std::string abstract;
+    
+//     GotoLine(of, *lineCorps);
+//         int line = findCorps(of, * lineCorps);// = * lineTitle+1;
+//         //int end = findconclusion(of, line);//On placera ici le find conclusion   //findAbstract(of) == 101 ? findUni(of) : findAbstract(of) - 1;
+//         GotoLine(of, line);
+//         if (of.is_open()) {
+//             while (line <= end){
+//                 getline(of, extracted);
+//                 //Concatenation
+//                 abstract = abstract + "\n" + "\t\t" + extracted;
+//                 line++;
+//         }
+//         std::cout << abstract << std::endl;
+//         return abstract;   
+//         }
+//     else{
+//         return "Erreur";
+//     }
+// }
 
 //Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
 void writeInFileXML(std::vector<File> &files, std::string path){
@@ -349,6 +529,8 @@ void writeInFileXML(std::vector<File> &files, std::string path){
         outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
         outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
         outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<introduction>" << std::endl << f.intro << std::endl << "\t</introduction>" << std::endl;
+        outfile << "\t<corps>" << std::endl << f.corps << std::endl << "\t</corps>" << std::endl;
         outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
@@ -366,6 +548,8 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Titre: " << std::endl << "\t\t" << f.title << std::endl;
         outfile << "Auteur: " << std::endl << f.author << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
+        outfile << "Introduction: " << std::endl << f.intro << std::endl;
+        outfile << "Corps: " << std::endl << f.corps << std::endl;
         outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
@@ -438,12 +622,17 @@ int main(int argc, char const *argv[])
         of.open(f.plainPath);
         int start = findAbstract(of) == 101 ? findUni(of) + 1 : findAbstract(of);
         GotoLine(of, start);
-        f.abstract = extractAbstract(of, start, findIntro(of, start));        
+        f.abstract = extractAbstract(of, start, findEndAbstract(of, start));        
         f.author = extractAuthor(of, &titleLine);
+        int startIntroTest = findIntro(of, findEndAbstract(of, start));
+        int startCorpsTest = findCorps(of, startIntroTest);
+        int endCorpsTest = findConclusion(of, startCorpsTest);
+        f.intro = extractAbstract(of, startIntroTest, startCorpsTest);
+        f.corps = extractAbstract(of, startCorpsTest, endCorpsTest);
         f.biblio = findBiblio(f.plainPath);
     }
     // removing the temporary folder
-    system("rm -r temp_plain");
+    //system("rm -r temp_plain");
 
     // replacing the output folder
     system("rm -rf output; mkdir output");
