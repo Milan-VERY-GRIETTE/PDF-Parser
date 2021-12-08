@@ -558,24 +558,6 @@ std::string findDiscussion(std::string path) {
         return "";
     }
 }
-//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
-void writeInFileXML(std::vector<File> &files, std::string path){
-    for (auto &f : files) {
-        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
-        //ATTENTION sous windows chemin se note avec \ et non /
-        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
-        std::ofstream outfile (txt.c_str(), std::ofstream::out);
-        outfile << "<article>" << std::endl;
-        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
-        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
-        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
-        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
-        outfile << "\t<introduction>" << std::endl << f.intro << std::endl << "\t</introduction>" << std::endl;
-        outfile << "\t<corps>" << std::endl << f.corps << std::endl << "\t</corps>" << std::endl;
-        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
-        outfile << "<article>" << std::endl;
-    }
-}
 
 
 //Fonction écriture dans un fichier XML prenant en paramètre un path et un vecteur de structure File
@@ -589,15 +571,13 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Titre: " << std::endl << "\t\t" << f.title << std::endl;
         outfile << "Auteur: " << std::endl << f.author << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
-        outfile << "Introduction: " << std::endl << f.intro << std::endl;
-        outfile << "Corps: " << std::endl << f.corps << std::endl;
-        outfile << "Conclusion: " << std::endl << f.conclusion << std::endl;
         outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
 
+
 //Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
-void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
+void writeInFileXML(std::vector<File> &files, std::string path){
     for (auto &f : files) {
         //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
         //ATTENTION sous windows chemin se note avec \ et non /
@@ -608,10 +588,27 @@ void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
         outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
         outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
         outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
-        if (f.discussion != "")
-        {
-            outfile << "\t<discussion>" << std::endl << f.discussion << std::endl << "\t</discussion>" << std::endl;
-        }
+        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
+        outfile << "<article>" << std::endl;
+    }
+}
+
+
+//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
+void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
+    for (auto &f : files) {
+        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
+        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
+        std::ofstream outfile (txt.c_str(), std::ofstream::out);
+        outfile << "<article>" << std::endl;
+        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
+        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
+        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
+        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<introduction>" << std::endl << f.intro << std::endl << "\t</introduction>" << std::endl;
+        outfile << "\t<corps>" << std::endl << f.corps << std::endl << "\t</corps>" << std::endl;
+        outfile << "\t<discussion>" << std::endl << f.discussion << std::endl << "\t</discussion>" << std::endl;
+        outfile << "\t<conclusion>" << std::endl << f.conclusion << std::endl << "\t</conclusion>" << std::endl;
         outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
@@ -633,13 +630,19 @@ int main(int argc, char const *argv[])
 
     if (!argv[2]) {
         std::cout << "> Attention. Type de sortie non spécifié. Le type texte sera utilisé par défaut." << std::endl;
-    } else if (!strcmp(argv[2], "-t") || !strcmp(argv[2], "-x")) {
+    } else if (!strcmp(argv[2], "-t") || !strcmp(argv[2], "-x") || !strcmp(argv[2], "-xd")) {
         outputType = argv[2];
     } else {
         std::cout << "> Attention. Type de sortie invalide. Le type texte sera utilisé par défaut." << std::endl;
     }
 
-    std::cout << "> Type de sortie chosie : " << (outputType == "-x" ? "XML" : "TXT") << std::endl;
+    std::string outputTypeText = "TXT";
+    if (outputType == "-x") {
+        outputTypeText = "XML";
+    } else if (outputType == "-xd") {
+        outputTypeText = "XML AVEC DETAILS";
+    }
+    std::cout << "> Type de sortie chosie : " << outputTypeText << std::endl;
 
     std::string inputPath = argv[1];
 
@@ -732,7 +735,7 @@ int main(int argc, char const *argv[])
     }
     
     // find and extract the titles abstracts, authors and biblios
-    std::cout << "> Récupération des titres, auteurs, abstracts et bibliographies..." << std::endl;
+    std::cout << "> Récupération des informations..." << std::endl;
     for (auto &f : files) {
         f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
@@ -762,11 +765,13 @@ int main(int argc, char const *argv[])
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
     if (outputType == "-x") {
+        writeInFileXML(files, "output");
+    } else if (outputType == "-xd") {
         writeInFileXMLWithDetails(files, "output");
     } else {
         writeInFileTXT(files, "output");
     }
-    
+        
     std::cout << "--- Fin du programme ---" << std::endl;
 
     return 0;
