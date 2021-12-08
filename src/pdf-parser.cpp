@@ -21,6 +21,7 @@ struct File {
    std::string biblio;
    std::string intro;
    std::string corps;
+   std::string conclusion;
    bool selected = false;
 };
 
@@ -433,7 +434,7 @@ std::string extractAbstract(std::fstream &of, int start, int end){
 
 
 // finds and returns the biblio from a plain text file
-std::string findBiblio(std::string path) {
+std::string findBiblio(std::string path, int* biblioPos) {
     
     std::ifstream monFlux(path);
 
@@ -442,7 +443,6 @@ std::string findBiblio(std::string path) {
     std::regex references("References");
 
     int lineCount = 0;
-    int biblioPos = 0;
 
     std::vector<std::string> document;
 
@@ -451,12 +451,12 @@ std::string findBiblio(std::string path) {
             document.push_back(ligne);
             lineCount++;
             if (regex_search(ligne , m, references)) {
-                biblioPos = lineCount;
+                *biblioPos = lineCount;
             }
         }
 
         std::string biblio;
-        for (size_t i = biblioPos; i < lineCount; i++) {
+        for (size_t i = *biblioPos; i < lineCount; i++) {
             biblio += "\t\t" +document.at(i) + "\n";
         }
         
@@ -591,6 +591,7 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
         outfile << "Introduction: " << std::endl << f.intro << std::endl;
         outfile << "Corps: " << std::endl << f.corps << std::endl;
+        outfile << "Conclusion: " << std::endl << f.conclusion << std::endl;
         outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
@@ -746,10 +747,14 @@ int main(int argc, char const *argv[])
         f.intro = extractAbstract(of, startIntroTest, startCorpsTest);
         f.corps = extractAbstract(of, startCorpsTest, endCorpsTest);
         f.discussion = findDiscussion(f.plainPath);
-        f.biblio = findBiblio(f.plainPath);
+
+        int biblioPos = 0;
+        f.biblio = findBiblio(f.plainPath, &biblioPos);
+
+        f.conclusion = extractAbstract(of, endCorpsTest, biblioPos);
     }
     // removing the temporary folder
-    //system("rm -r temp_plain");
+    system("rm -r temp_plain");
 
     // replacing the output folder
     system("rm -rf output; mkdir output");
