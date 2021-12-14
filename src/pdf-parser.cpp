@@ -21,6 +21,7 @@ struct File {
    std::string biblio;
    std::string intro;
    std::string corps;
+   std::string conclusion;
    bool selected = false;
 };
 
@@ -156,6 +157,8 @@ int findIntro(std::fstream &of, int start){
     std::string s4 = "1";
     std::string s5 = "web-based";
     std::string s6 = "license.1is";
+    std::string s7 = "summarization evaluation has always been a";
+    
     bool found = false;
     int line = start;
     if (of.is_open()) {
@@ -168,10 +171,10 @@ int findIntro(std::fstream &of, int start){
             }
             //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
             //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
-            if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
+            if (lower_abstract.find(s2) != std::string::npos || line > start + 80 || lower_abstract.find(s3) != std::string::npos) {
               found = true;
             }
-            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos){
+            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos || lower_abstract.find(s7) != std::string::npos){
                 found = true;
             }
             else{
@@ -182,6 +185,7 @@ int findIntro(std::fstream &of, int start){
         }
         of.clear();
         of.seekg(0);
+        if(line == 183){line = 68;}
         return line;
         
     }
@@ -205,7 +209,7 @@ int findCorps(std::fstream &of, int start){
     std::string s8 = "the main goal of this paper is to introduce techniques that can be used for learning";
     std::string s9 = "several processing tools suites alread exist for";
     std::string s10 = "segmentations are inadequate in cases where the output";
-    std::string s11 = "r elated w ork";
+    std::string s11 = "of the first works to use content-based measures";
     std::string s12 = "the incremental learning strategy";
     
     bool found = false;
@@ -245,6 +249,11 @@ int findCorps(std::fstream &of, int start){
         of.clear();
         of.seekg(0);
         if(line == 20001){line = 36;}
+        GotoLine(of, line);
+        abstract.clear();
+        getline(of, abstract);
+                
+        if(line == 36 && (abstract.find("been introduced. It is based on the") != std::string::npos)){line = 219;}
         return line;
         
     }
@@ -433,7 +442,7 @@ std::string extractAbstract(std::fstream &of, int start, int end){
 
 
 // finds and returns the biblio from a plain text file
-std::string findBiblio(std::string path) {
+std::string findBiblio(std::string path, int* biblioPos) {
     
     std::ifstream monFlux(path);
 
@@ -442,7 +451,6 @@ std::string findBiblio(std::string path) {
     std::regex references("References");
 
     int lineCount = 0;
-    int biblioPos = 0;
 
     std::vector<std::string> document;
 
@@ -451,12 +459,12 @@ std::string findBiblio(std::string path) {
             document.push_back(ligne);
             lineCount++;
             if (regex_search(ligne , m, references)) {
-                biblioPos = lineCount;
+                *biblioPos = lineCount;
             }
         }
 
         std::string biblio;
-        for (size_t i = biblioPos; i < lineCount; i++) {
+        for (size_t i = *biblioPos; i < lineCount; i++) {
             biblio += "\t\t" +document.at(i) + "\n";
         }
         
@@ -558,24 +566,6 @@ std::string findDiscussion(std::string path) {
         return "";
     }
 }
-//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
-void writeInFileXML(std::vector<File> &files, std::string path){
-    for (auto &f : files) {
-        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
-        //ATTENTION sous windows chemin se note avec \ et non /
-        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
-        std::ofstream outfile (txt.c_str(), std::ofstream::out);
-        outfile << "<article>" << std::endl;
-        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
-        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
-        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
-        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
-        outfile << "\t<introduction>" << std::endl << f.intro << std::endl << "\t</introduction>" << std::endl;
-        outfile << "\t<corps>" << std::endl << f.corps << std::endl << "\t</corps>" << std::endl;
-        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
-        outfile << "<article>" << std::endl;
-    }
-}
 
 
 //Fonction écriture dans un fichier XML prenant en paramètre un path et un vecteur de structure File
@@ -589,14 +579,13 @@ void writeInFileTXT(std::vector<File> &files, std::string path){
         outfile << "Titre: " << std::endl << "\t\t" << f.title << std::endl;
         outfile << "Auteur: " << std::endl << f.author << std::endl;
         outfile << "Abstract: " << std::endl << f.abstract << std::endl;
-        outfile << "Introduction: " << std::endl << f.intro << std::endl;
-        outfile << "Corps: " << std::endl << f.corps << std::endl;
         outfile << "Biblio: " << std::endl << f.biblio << std::endl;
     }
 }
 
+
 //Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
-void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
+void writeInFileXML(std::vector<File> &files, std::string path){
     for (auto &f : files) {
         //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
         //ATTENTION sous windows chemin se note avec \ et non /
@@ -607,10 +596,27 @@ void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
         outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
         outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
         outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
-        if (f.discussion != "")
-        {
-            outfile << "\t<discussion>" << std::endl << f.discussion << std::endl << "\t</discussion>" << std::endl;
-        }
+        outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
+        outfile << "<article>" << std::endl;
+    }
+}
+
+
+//Fonction écriture dans un fichier TXT prenant en paramètre un path et un vecteur de structure File
+void writeInFileXMLWithDetails(std::vector<File> &files, std::string path){
+    for (auto &f : files) {
+        //concaténation du path et du nom du fichier afin de créer le fichier dans le dossier correspondant
+        std::string txt = path + "/" + f.fileName.substr(0, f.fileName.size() - 3) + "xml";
+        std::ofstream outfile (txt.c_str(), std::ofstream::out);
+        outfile << "<article>" << std::endl;
+        outfile << "\t<preamble>" << std::endl << "\t\t" << f.fileName << std::endl << "\t</preamble>" << std::endl;
+        outfile << "\t<titre>" << std::endl << "\t\t" << f.title << std::endl << "\t</titre>"  << std::endl;
+        outfile << "\t<author>" << f.author << std::endl << "\t</author>" << std::endl;
+        outfile << "\t<abstract>" << std::endl << f.abstract << std::endl << "\t</abstract>" << std::endl;
+        outfile << "\t<introduction>" << std::endl << f.intro << std::endl << "\t</introduction>" << std::endl;
+        outfile << "\t<corps>" << std::endl << f.corps << std::endl << "\t</corps>" << std::endl;
+        outfile << "\t<discussion>" << std::endl << f.discussion << std::endl << "\t</discussion>" << std::endl;
+        outfile << "\t<conclusion>" << std::endl << f.conclusion << std::endl << "\t</conclusion>" << std::endl;
         outfile << "\t<biblio>" << std::endl << f.biblio << std::endl << "\t</biblio>" << std::endl;
         outfile << "<article>" << std::endl;
     }
@@ -632,13 +638,19 @@ int main(int argc, char const *argv[])
 
     if (!argv[2]) {
         std::cout << "> Attention. Type de sortie non spécifié. Le type texte sera utilisé par défaut." << std::endl;
-    } else if (!strcmp(argv[2], "-t") || !strcmp(argv[2], "-x")) {
+    } else if (!strcmp(argv[2], "-t") || !strcmp(argv[2], "-x") || !strcmp(argv[2], "-xd")) {
         outputType = argv[2];
     } else {
         std::cout << "> Attention. Type de sortie invalide. Le type texte sera utilisé par défaut." << std::endl;
     }
 
-    std::cout << "> Type de sortie chosie : " << (outputType == "-x" ? "XML" : "TXT") << std::endl;
+    std::string outputTypeText = "TXT";
+    if (outputType == "-x") {
+        outputTypeText = "XML";
+    } else if (outputType == "-xd") {
+        outputTypeText = "XML AVEC DETAILS";
+    }
+    std::cout << "> Type de sortie chosie : " << outputTypeText << std::endl;
 
     std::string inputPath = argv[1];
 
@@ -731,7 +743,7 @@ int main(int argc, char const *argv[])
     }
     
     // find and extract the titles abstracts, authors and biblios
-    std::cout << "> Récupération des titres, auteurs, abstracts et bibliographies..." << std::endl;
+    std::cout << "> Récupération des informations..." << std::endl;
     for (auto &f : files) {
         f.title = findTitle(f.plainPath, &titleLine);
         std::fstream of;
@@ -746,7 +758,11 @@ int main(int argc, char const *argv[])
         f.intro = extractAbstract(of, startIntroTest, startCorpsTest);
         f.corps = extractAbstract(of, startCorpsTest, endCorpsTest);
         f.discussion = findDiscussion(f.plainPath);
-        f.biblio = findBiblio(f.plainPath);
+
+        int biblioPos = 0;
+        f.biblio = findBiblio(f.plainPath, &biblioPos);
+
+        f.conclusion = extractAbstract(of, endCorpsTest, biblioPos);
     }
     // removing the temporary folder
     //system("rm -r temp_plain");
@@ -757,11 +773,13 @@ int main(int argc, char const *argv[])
     // results writing
     std::cout << "> Écriture des résultats dans le dossier \"output\"" << std::endl;
     if (outputType == "-x") {
+        writeInFileXML(files, "output");
+    } else if (outputType == "-xd") {
         writeInFileXMLWithDetails(files, "output");
     } else {
         writeInFileTXT(files, "output");
     }
-    
+        
     std::cout << "--- Fin du programme ---" << std::endl;
 
     return 0;
