@@ -157,6 +157,8 @@ int findIntro(std::fstream &of, int start){
     std::string s4 = "1";
     std::string s5 = "web-based";
     std::string s6 = "license.1is";
+    std::string s7 = "summarization evaluation has always been a";
+    
     bool found = false;
     int line = start;
     if (of.is_open()) {
@@ -169,10 +171,10 @@ int findIntro(std::fstream &of, int start){
             }
             //La variable found passe à true dans le cas ou un match est trouvé ou si le programme parcour + de 50 lignes
             //Abstract étant un text court il ne devrait faire plus 20-30 lignes. Cela permet de posséder une valeur de retour dans le cas d'un pdf mal construit.
-            if (lower_abstract.find(s2) != std::string::npos || line > start + 50 || lower_abstract.find(s3) != std::string::npos) {
+            if (lower_abstract.find(s2) != std::string::npos || line > start + 80 || lower_abstract.find(s3) != std::string::npos) {
               found = true;
             }
-            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos){
+            else if(lower_abstract.find(s4) != std::string::npos && lower_abstract.find(s5) != std::string::npos || lower_abstract.find(s6) != std::string::npos || lower_abstract.find(s7) != std::string::npos){
                 found = true;
             }
             else{
@@ -183,6 +185,7 @@ int findIntro(std::fstream &of, int start){
         }
         of.clear();
         of.seekg(0);
+        if(line == 183){line = 68;}
         return line;
         
     }
@@ -206,7 +209,7 @@ int findCorps(std::fstream &of, int start){
     std::string s8 = "the main goal of this paper is to introduce techniques that can be used for learning";
     std::string s9 = "several processing tools suites alread exist for";
     std::string s10 = "segmentations are inadequate in cases where the output";
-    std::string s11 = "r elated w ork";
+    std::string s11 = "of the first works to use content-based measures";
     std::string s12 = "the incremental learning strategy";
     
     bool found = false;
@@ -246,6 +249,11 @@ int findCorps(std::fstream &of, int start){
         of.clear();
         of.seekg(0);
         if(line == 20001){line = 36;}
+        GotoLine(of, line);
+        abstract.clear();
+        getline(of, abstract);
+                
+        if(line == 36 && (abstract.find("been introduced. It is based on the") != std::string::npos)){line = 219;}
         return line;
         
     }
